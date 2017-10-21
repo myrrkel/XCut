@@ -15,6 +15,7 @@ var optimizer = new cutOptim.Optimizer(cuts);
 
 var bars = optimizer.optimize();
 
+console.log('Bars number='+optimizer.countBars());
 console.log('TotalSize='+optimizer.totalSizeBars());
 console.log('TotalUsed='+optimizer.totalUsedBars());
 console.log('LossRate='+Math.round(optimizer.totalLossBars()*10000/optimizer.totalSizeBars(),4)/100+'%');

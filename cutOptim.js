@@ -1,12 +1,28 @@
-function Bar(size){
-	this.ID = 0;
+
+function Cut(jsonCut,parentOptimizer){
+	this.l = jsonCut.l;
+	this.packingId = jsonCut.packingId;
+	this.optimizer = parentOptimizer;
+
+}
+Cut.prototype.totalSize = function(){return this.l+this.optimizer.bladeThickness};
+
+
+
+function Bar(size,id){
+	this.ID = id;
 	this.size = size;
 	this.sizeLeft = size;
 	this.pieces = [];
 
-	this.addPiece = function(cut,bladeThickness){
-		this.sizeLeft -= cut.l+bladeThickness;
-		this.pieces.push(cut);
+	this.addPiece = function(cut){
+		if(this.sizeLeft == cut.l)
+			{this.sizeLeft -= cut.l}
+		else {this.sizeLeft -= cut.totalSize()}
+
+			this.pieces.push(cut);
+		cut.used = true;
+		console.log('Add '+cut.l+'--> barID='+this.ID+' sizeLeft:'+this.sizeLeft);
 	};
 
 	this.sizeUsed = function(){
@@ -19,13 +35,15 @@ function Bar(size){
 
 function Optimizer(arrayCuts)
 {
-	this.cuts = arrayCuts;
+	this.jsonCuts = arrayCuts;
+	this.cuts = [];
 	this.barSize = 6000;
 	this.bars = [];
 	this.lastBar = new Bar();
 	this.stock = [1200,826];
 	this.bladeThickness = 2;
 
+	this.countBars = function(){return this.bars.length}
 	this.totalSizeBars= function(){
 		var tsize = 0;
 		for (bar of this.bars){tsize += bar.size;}
@@ -41,78 +59,176 @@ function Optimizer(arrayCuts)
 		for (bar of this.bars){tsize += bar.sizeLeft;}
 			return tsize;
 	}
+	this.totalCuts= function(){
+		var tsize = 0;
+		for (i=0;i<this.cuts.length;i++){tsize += this.cuts[i].l;}
+			return tsize;
+	}
+	this.totalCutsLeft= function(){
+		var tsize = 0;
+		for (i=0;i<this.cuts.length;i++){
+			if(this.cuts.used ==false){tsize += this.cuts[i].l;}
+		}
+		return tsize;
+	}
+
+
 	this.findBarFitBest= function(size){
 		var ibar = -1;
 		var bestSizeFound = 0;
 		for (i=0;i<this.bars.length;i++){
-			if(this.bars[i].sizeLeft > size && this.bars[i].sizeLeft){
+			if(this.bars[i].sizeLeft > size){
 				bestSizeFound = this.bars[i].sizeLeft;
 				ibar = i;
 			}
-
-
 		}
 
-		if (ibar >= 0) {
-			return this.bars[ibar];
+		if (ibar >= 0) {this.lastBar = this.bars[ibar]}
+			else {this.addBar(this.barSize)}
 		}
-		else 
-		{
-			this.addBar(this.barSize);
-			return this.bars[this.bars.length-1];
+
+
+
+	this.findCutFitBest= function(size){
+		var icut = -1;
+		var bestSizeFound = 0;
+		for (i=0;i<this.cuts.length;i++){
+			if(this.cuts[i].totalSize > bestSizeFound){
+				if(this.cuts[i].totalSize < size) {bestSizeFound = this.cuts[i].sizeLeft;icut = i;}
+				if(this.cuts[i].l == size) {bestSizeFound = this.cuts[i].l;icut = i;}
+			}
 		}
+
+		return icut;
 	}
 
-	this.optimize = function()
-	{
-		//this.cuts.sort(function(a, b){return b.l - a.l});
-		this.cuts.sort(function(a, b){return 0.5 - Math.random()});
 
-		for (cut of this.cuts){
-
-			//add a bar to start
-			if(this.bars.length == 0){ this.addBar(this.barSize);}
-
-			console.log(cut.l+' lastBar.sizeLeft:'+this.lastBar.sizeLeft+' bars='+this.bars.length);
-
-			//Get the best bar
-			var barFitBest = this.findBarFitBest(cut.l+this.bladeThickness);
-
-			barFitBest.addPiece(cut,this.bladeThickness);
-			}
-
-		return this.bars;
-	};
-
-	this.optimizeDumb = function()
-	{
-		for (cut of this.cuts)
-		{
-
-		//add a bar to start
-		if(this.bars.length == 0){ this.addBar(this.barSize);}
-
-		console.log(cut.l+' lastBar.sizeLeft:'+this.lastBar.sizeLeft+' bars='+this.bars.length);
-
-		//if the last bar is too short, we add a new bar
-		if(this.lastBar.sizeLeft < cut.l+this.bladeThickness){ this.addBar(this.barSize);}
-
-		//add the cut to the last bar
-		this.lastBar.addPiece(cut,this.bladeThickness);
+	this.findEmptyBar= function(){
+		var ibar = -1;
+		for (i=0;i<this.bars.length;i++){
+			if(this.bars[i].sizeLeft = this.barSize){ibar = i}
 		}
 
+	if (ibar >= 0) {this.lastBar = this.bars[ibar]}
+		else {this.addBar(this.barSize)}
+	}
+
+this.optimize = function()
+{
+	//Loading Cuts in an array
+	this.jsonToCuts();
+	//Create a set of empty bars
+	this.initBars();	
+	//fill bars
+	//this.optiBiggestCuts();
+	//this.optiCutFitBest();
+
 	return this.bars;
+};
+
+this.optimize2 = function()
+{
+	this.jsonToCuts();
+	this.optiBiggestCuts();		
+	this.optiBarFitBest();
+
+	return this.bars;
+};
+
+this.minBarNeeded = function(){
+	return Math.ceil(this.totalCuts()/this.barSize)
+}
+
+this.initBars = function(){
+	console.log('min bars='+this.minBarNeeded());
+	for (i=1;i<this.minBarNeeded();i++)
+		{
+			console.log('boucle='+this.minBarNeeded());
+			this.addBar(0);
+		}
+};
+
+
+this.optiBarFitBest = function(){
+
+	this.sortCuts(false);
+
+		//We add the unused cuts
+		for (cut of this.cuts){
+			if (cut.used != true)
+			{
+				//Get the best fit bar
+				this.findBarFitBest(cut.totalSize());
+
+				//Add the cut to the bar
+				this.lastBar.addPiece(cut);
+			}
+		}
+	};
+
+
+	this.optiCutFitBest = function(){
+
+		this.sortCuts(false);
+
+		//We add the unused cuts
+		while (this.totalCutsLeft() > 0) {
+			for (bar of this.bars){
+				if (bar.used != true)
+				{
+				//Get cut that fit best
+				this.findCutFitBest(bar.sizeLeft);
+
+				//Add the cut to the bar
+				bar.addPiece(cut);
+				}
+			}
+		}
+	};
+
+this.optiBiggestCuts = function(){
+
+	this.sortCuts();
+		//We add the cuts bigger than a half of bar
+		for (cut of this.cuts){
+			if (cut.totalSize() >= this.barSize/2 && cut.l==this.barSize)
+			{
+				//Add a new bar
+				this.addBar();
+
+				//Add the cut to the bar
+				this.lastBar.addPiece(cut);
+			}
+		}
+
 	};
 
 
 
-	this.addBar = function(sizeBar){
-		//this.lastBarSize = sizeBar;
-		//console.log('addBar:'+sizeBar);
-		this.bars.push(new Bar(sizeBar));
-		this.lastBar = this.bars[this.bars.length-1];
-		//this.lastBar = this.bars.push(new Bar(sizeBar));;
+	this.jsonToCuts = function() {
+		this.cuts = [];
+		for (jcut of this.jsonCuts){
 
+			this.cuts.push(new Cut(jcut,this));
+		}
+
+	};
+
+
+	this.addBar = function(sizeBar=0){
+		console.log('Add BAR '+sizeBar);
+		if (sizeBar==0){sizeBar=this.barSize;}
+		this.bars.push(new Bar(sizeBar,this.bars.length+1));
+		this.lastBar = this.bars[this.bars.length-1];
+
+	};
+
+
+	this.sortCuts = function(randomize=false){
+		if (randomize==true) 
+			{this.cuts.sort(function(a, b){return 0.5 - Math.random()});}
+		else
+			{this.cuts.sort(function(a, b){return b.l - a.l});}		
 	};
 
 
