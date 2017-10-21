@@ -19,7 +19,6 @@ function Bar(size,id){
 		if(this.sizeLeft == cut.l)
 			{this.sizeLeft -= cut.l}
 		else {this.sizeLeft -= cut.totalSize()}
-
 			this.pieces.push(cut);
 		cut.used = true;
 		console.log('Add '+cut.l+'--> barID='+this.ID+' sizeLeft:'+this.sizeLeft);
@@ -64,13 +63,6 @@ function Optimizer(arrayCuts)
 		for (i=0;i<this.cuts.length;i++){tsize += this.cuts[i].l;}
 			return tsize;
 	}
-	this.totalCutsLeft= function(){
-		var tsize = 0;
-		for (i=0;i<this.cuts.length;i++){
-			if(this.cuts.used ==false){tsize += this.cuts[i].l;}
-		}
-		return tsize;
-	}
 
 
 	this.findBarFitBest= function(size){
@@ -100,7 +92,7 @@ function Optimizer(arrayCuts)
 		}
 
 		return icut;
-	}
+		}
 
 
 	this.findEmptyBar= function(){
@@ -120,8 +112,7 @@ this.optimize = function()
 	//Create a set of empty bars
 	this.initBars();	
 	//fill bars
-	//this.optiBiggestCuts();
-	//this.optiCutFitBest();
+	this.optiBarFitBest();
 
 	return this.bars;
 };
@@ -142,10 +133,7 @@ this.minBarNeeded = function(){
 this.initBars = function(){
 	console.log('min bars='+this.minBarNeeded());
 	for (i=1;i<this.minBarNeeded();i++)
-		{
-			console.log('boucle='+this.minBarNeeded());
-			this.addBar(0);
-		}
+		{this.addBar();}
 };
 
 
@@ -172,23 +160,21 @@ this.optiBarFitBest = function(){
 		this.sortCuts(false);
 
 		//We add the unused cuts
-		while (this.totalCutsLeft() > 0) {
-			for (bar of this.bars){
-				if (bar.used != true)
-				{
-				//Get cut that fit best
-				this.findCutFitBest(bar.sizeLeft);
+		for (cut of this.cuts){
+			if (cut.used != true)
+			{
+				//Get the best fit bar
+				this.findBarFitBest(cut.totalSize());
 
 				//Add the cut to the bar
-				bar.addPiece(cut);
-				}
+				this.lastBar.addPiece(cut);
 			}
 		}
 	};
 
-this.optiBiggestCuts = function(){
-
-	this.sortCuts();
+	this.optiBiggestCuts = function(){
+		
+		this.sortCuts();
 		//We add the cuts bigger than a half of bar
 		for (cut of this.cuts){
 			if (cut.totalSize() >= this.barSize/2 && cut.l==this.barSize)
@@ -216,7 +202,6 @@ this.optiBiggestCuts = function(){
 
 
 	this.addBar = function(sizeBar=0){
-		console.log('Add BAR '+sizeBar);
 		if (sizeBar==0){sizeBar=this.barSize;}
 		this.bars.push(new Bar(sizeBar,this.bars.length+1));
 		this.lastBar = this.bars[this.bars.length-1];
