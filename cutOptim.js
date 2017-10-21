@@ -3,6 +3,7 @@ function Cut(jsonCut,parentOptimizer){
 	this.l = jsonCut.l;
 	this.packingId = jsonCut.packingId;
 	this.optimizer = parentOptimizer;
+	this.used = false;
 
 }
 Cut.prototype.totalSize = function(){return this.l+this.optimizer.bladeThickness};
@@ -63,47 +64,61 @@ function Optimizer(arrayCuts)
 		for (i=0;i<this.cuts.length;i++){tsize += this.cuts[i].l;}
 			return tsize;
 	}
-
-
-	this.findBarFitBest= function(size){
-		var ibar = -1;
-		var bestSizeFound = 0;
-		for (i=0;i<this.bars.length;i++){
-			if(this.bars[i].sizeLeft > size){
-				bestSizeFound = this.bars[i].sizeLeft;
-				ibar = i;
-			}
-		}
-
-		if (ibar >= 0) {this.lastBar = this.bars[ibar]}
-			else {this.addBar(this.barSize)}
-		}
-
-
-
-	this.findCutFitBest= function(size){
-		var icut = -1;
-		var bestSizeFound = 0;
+	this.totalCutsLeft= function(){
+		var tsize = 0;
 		for (i=0;i<this.cuts.length;i++){
-			if(this.cuts[i].totalSize > bestSizeFound){
-				if(this.cuts[i].totalSize < size) {bestSizeFound = this.cuts[i].sizeLeft;icut = i;}
-				if(this.cuts[i].l == size) {bestSizeFound = this.cuts[i].l;icut = i;}
-			}
+			if(this.cuts[i].used ==false){tsize += this.cuts[i].l;}
 		}
-
-		return icut;
+		return tsize;
+	}
+	this.countCutsLeft= function(){
+		var nb = 0;
+		for (i=0;i<this.cuts.length;i++){
+			if(this.cuts[i].used ==false){nb++}
 		}
+	return nb;
+}
 
 
-	this.findEmptyBar= function(){
-		var ibar = -1;
-		for (i=0;i<this.bars.length;i++){
-			if(this.bars[i].sizeLeft = this.barSize){ibar = i}
+this.findBarFitBest= function(size){
+	var ibar = -1;
+	var bestSizeFound = 0;
+	for (i=0;i<this.bars.length;i++){
+		if(this.bars[i].sizeLeft >= size && (bestSizeFound > this.bars[i].sizeLeft || bestSizeFound==0)){
+			bestSizeFound = this.bars[i].sizeLeft;
+			ibar = i;
 		}
+	}
 
 	if (ibar >= 0) {this.lastBar = this.bars[ibar]}
 		else {this.addBar(this.barSize)}
 	}
+
+
+
+this.findCutFitBest= function(size){
+	var icut = -1;
+	var bestSizeFound = 0;
+	for (i=0;i<this.cuts.length;i++){
+		if(this.cuts[i].totalSize() > bestSizeFound && this.cuts[i].used==false){
+			if(this.cuts[i].totalSize() < size) {bestSizeFound = this.cuts[i].sizeLeft;icut = i;}
+			if(this.cuts[i].l == size) {bestSizeFound = this.cuts[i].l;icut = i;}
+		}
+	}
+
+	return icut;
+}
+
+
+this.findEmptyBar= function(){
+	var ibar = -1;
+	for (i=0;i<this.bars.length && ibar<0;i++){
+		if(this.bars[i].sizeLeft == this.barSize){ibar = i}
+	}
+
+if (ibar >= 0) {this.lastBar = this.bars[ibar]}
+	else {this.addBar(this.barSize)}
+}
 
 this.optimize = function()
 {
@@ -112,10 +127,12 @@ this.optimize = function()
 	//Create a set of empty bars
 	this.initBars();	
 	//fill bars
-	this.optiBarFitBest();
+	this.optiBiggestCuts();
+	this.optiCutFitBest();
+	//this.optiBarFitBest();
 
 	return this.bars;
-};
+}
 
 this.optimize2 = function()
 {
@@ -124,17 +141,18 @@ this.optimize2 = function()
 	this.optiBarFitBest();
 
 	return this.bars;
-};
+}
 
 this.minBarNeeded = function(){
 	return Math.ceil(this.totalCuts()/this.barSize)
 }
 
 this.initBars = function(){
-	console.log('min bars='+this.minBarNeeded());
-	for (i=1;i<this.minBarNeeded();i++)
+	var nbBar = this.minBarNeeded();
+	console.log('min bars='+nbBar);
+	for (i=0;i<nbBar;i++)
 		{this.addBar();}
-};
+}
 
 
 this.optiBarFitBest = function(){
@@ -152,42 +170,62 @@ this.optiBarFitBest = function(){
 				this.lastBar.addPiece(cut);
 			}
 		}
-	};
+	}
 
 
 	this.optiCutFitBest = function(){
-
+		var cutLeft = this.countCutsLeft();
+		var icut = 0;
+		var barFound = true;
 		this.sortCuts(false);
 
 		//We add the unused cuts
-		for (cut of this.cuts){
-			if (cut.used != true)
-			{
-				//Get the best fit bar
-				this.findBarFitBest(cut.totalSize());
-
+		console.log('cutLeft='+cutLeft);
+		while (cutLeft > 0 && barFound==true) 
+		{
+			barFound = false;
+			for (bar of this.bars){
+				//Get cut that fit best
+				icut = this.findCutFitBest(bar.sizeLeft);
+				console.log('icut='+icut);
 				//Add the cut to the bar
-				this.lastBar.addPiece(cut);
+				if(icut >= 0) {
+					bar.addPiece(this.cuts[icut]);
+					barFound = true;
+					this.sortBars();
+				}
 			}
+			if (barFound==false) {this.addBar();barFound = true;}
+			cutLeft = this.countCutsLeft();	
+			console.log('cutLeft='+cutLeft);
 		}
-	};
+	}
 
-	this.optiBiggestCuts = function(){
-		
+	this.optiBiggestCuts = function(autoAdd=false){
+
 		this.sortCuts();
 		//We add the cuts bigger than a half of bar
 		for (cut of this.cuts){
-			if (cut.totalSize() >= this.barSize/2 && cut.l==this.barSize)
+			if (cut.totalSize() >= this.barSize/2 || cut.l==this.barSize)
 			{
-				//Add a new bar
-				this.addBar();
+				if (autoAdd==true) {
+					//Add a new bar
+					this.addBar();
+				}
+				else
+				{
+					//Find an empty bar
+					this.findEmptyBar();
+
+				}
 
 				//Add the cut to the bar
 				this.lastBar.addPiece(cut);
 			}
 		}
 
-	};
+	}
+
 
 
 
@@ -198,15 +236,16 @@ this.optiBarFitBest = function(){
 			this.cuts.push(new Cut(jcut,this));
 		}
 
-	};
+	}
 
 
 	this.addBar = function(sizeBar=0){
+		console.log('Add BAR '+sizeBar);
 		if (sizeBar==0){sizeBar=this.barSize;}
 		this.bars.push(new Bar(sizeBar,this.bars.length+1));
 		this.lastBar = this.bars[this.bars.length-1];
 
-	};
+	}
 
 
 	this.sortCuts = function(randomize=false){
@@ -214,7 +253,15 @@ this.optiBarFitBest = function(){
 			{this.cuts.sort(function(a, b){return 0.5 - Math.random()});}
 		else
 			{this.cuts.sort(function(a, b){return b.l - a.l});}		
-	};
+	}
+
+
+	this.sortBars= function(sizeLeftAsc=true){
+		if (sizeLeftAsc) 
+			{this.bars.sort(function(a, b){return a.sizeLeft - b.sizeLeft});}
+		else
+			{this.bars.sort(function(a, b){return b.sizeLeft - a.sizeLeft});}
+	}
 
 
 }
