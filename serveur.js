@@ -15,10 +15,10 @@ var optimizer = new cutOptim.Optimizer(cuts);
 
 var bars = optimizer.optimize();
 
-console.log('Bars number='+optimizer.countBars());
-console.log('TotalSize='+optimizer.totalSizeBars());
-console.log('TotalUsed='+optimizer.totalUsedBars());
-console.log('LossRate='+Math.round(optimizer.totalLossBars()*10000/optimizer.totalSizeBars(),4)/100+'%');
+console.log('Bars number='+optimizer.barCol.countBars());
+console.log('TotalSize='+optimizer.barCol.totalSizeBars());
+console.log('TotalUsed='+optimizer.barCol.totalUsedBars());
+console.log('LossRate='+Math.round(optimizer.barCol.totalLossBars()*10000/optimizer.barCol.totalSizeBars(),4)/100+'%');
 
 
 
@@ -44,7 +44,14 @@ app.get('/', function(req, res) {
 
 res.setHeader('Content-Type', 'text/html');
 
-    res.render('cuts.ejs', {cuts: cuts});
+    res.render('cuts.ejs', {cuts: optimizer.cutCol.cuts});
+})
+
+.get('/extracuts', function(req, res) {
+
+res.setHeader('Content-Type', 'text/html');
+
+    res.render('extraCuts.ejs', {cuts: optimizer.cutCol.extraCuts});
 })
 
 .get('/bars', function(req, res) {
