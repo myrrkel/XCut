@@ -4,11 +4,11 @@
 
         <ul>
 
-        <% for(var i=0; i < cuts.length; i++) { if(cuts[i].used==false){   %>
+        <% for(var i=0; i < cuts.length; i++) {  %>
 
-            <li><%= cuts[i].l %> used: <%= cuts[i].used %> pack: <%= cuts[i].packingId %> i: <%= i %> parents: <%= cuts[i].getTxtParents() %>    </li>
+            <li><%= cuts[i].l %> used: <%= cuts[i].used %> pack: <%= cuts[i].packingId %> id: <%= cuts[i].id %> </li>
 
-        <% }}; %>
+        <% }; %>
 
         </ul>
 

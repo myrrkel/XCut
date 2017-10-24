@@ -6,7 +6,7 @@
 
         <% for(var i=0; i < bars.length; i++) { %>
 
-            <li>Barre n°<%= i %> ; sizeLeft= <%= bars[i].sizeLeft; %>
+            <li>Barre n°<%= bars[i].id %> ; sizeLeft= <%= bars[i].sizeLeft; %>
 
              <% for(var j=0; j < bars[i].pieces.length; j++) { %>
             <p>length=<%= bars[i].pieces[j].l %> ; packingId=<%= bars[i].pieces[j].packingId %></p>
