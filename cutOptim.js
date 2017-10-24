@@ -22,15 +22,20 @@ function Optimizer(arrayCuts){
 		//Create a set of empty bars
 		this.initBars();	
 		//fill bars
-		//this.optiBiggestCuts();
+		this.optiBiggestCuts();
 
-		this.optiStartAllBars();
-		this.cutCol.generateExtraCuts();
+		//this.optiStartAllBars();
+		this.cutCol.generateExtraCuts(null,null,2,800);
 
 		//console.log('count 2029 ='+this.cutCol.countExtraCutsEqualTo(2029));
-		this.optiCutFitBest();
+		this.optiCutFitBest(true);
+		this.cutCol.generateExtraCuts(this.cutCol.cuts,this.cutCol.extraCuts,3,500);
+		this.optiCutFitBest(false);
 
 		//this.optiBarFitBest();
+
+
+		this.barCol.sortByID();
 
 		return this.barCol.bars;
 	}
@@ -54,7 +59,7 @@ function Optimizer(arrayCuts){
 	}
 
 
-	this.optiCutFitBest = function(){
+	this.optiCutFitBest = function(onlyStartedBars=false){
 		var cutLeft = this.cutCol.countCutsLeft();
 		var cut = null;
 		var barFound = false;
@@ -66,14 +71,14 @@ function Optimizer(arrayCuts){
 		while (cutLeft > 0) {
 			barFound = false;
 			for (bar of this.barCol.bars){
-				if(bar.sizeLeft >= this.cutCol.minimum()+this.bladeThickness){
+				if(bar.sizeLeft >= this.cutCol.minimum()+this.bladeThickness && ((onlyStartedBars==true && bar.started()) || (onlyStartedBars==false))){
 					//Get the cut that fit best
 					cut = this.cutCol.findCutFitBest(bar.sizeLeft);
 					if(cut != null) {
 						console.log('bar'+bar.id+' sizeLeft='+bar.sizeLeft+' cutLeft='+cutLeft+' cut='+cut.l+' cutID='+cut.id+' mini='+this.cutCol.minimum()+' '+cut.getText());
 
 						if(cut.pieces.length > 0){
-							for (p of cut.getAllPieces()){
+							for (p of cut.pieces){
 								bar.addPiece(p);
 							}
 							cut.setUsed();
@@ -84,7 +89,10 @@ function Optimizer(arrayCuts){
 						this.barCol.sortBars(true);
 					}
 				}
+				cutLeft = this.cutCol.countCutsLeft();	
 			}
+
+			if(onlyStartedBars){break;}
 
 			if (barFound==false){this.barCol.addBar()};
 			cutLeft = this.cutCol.countCutsLeft();	
@@ -94,7 +102,7 @@ function Optimizer(arrayCuts){
 
 	this.optiBiggestCuts = function(autoAdd=false){
 
-		this.cutCol.sortCuts(false);
+		this.cutCol.sortCuts(true);
 		//We add the cuts bigger than a half of bar
 		for (cut of this.cutCol.cuts){
 			if (cut.totalSize() >= this.barSize/2 || cut.l==this.barSize){
@@ -136,13 +144,14 @@ function Optimizer(arrayCuts){
 	this.initBars = function(){
 		var nbBar = this.minBarNeeded();
 		console.log('min bars='+nbBar);
-		for (i=0;i<nbBar;i++)
-			{this.barCol.addBar();}
+		for (var i=0;i<nbBar;i++){
+			this.barCol.addBar()
+		}
 	}
 
 	this.jsonToCuts = function() {
 		this.cutCol.cuts = [];
-		for (i=0;i<this.jsonCuts.length;i++){
+		for (var i=0;i<this.jsonCuts.length;i++){
 
 			this.cutCol.cuts.push(new libCut.Cut(this.jsonCuts[i],this,i));
 		}

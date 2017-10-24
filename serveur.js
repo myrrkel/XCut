@@ -24,7 +24,7 @@ console.log('SumCuts='+optimizer.cutCol.cuts.length);
 console.log('TotalCuts='+optimizer.cutCol.totalCuts());
 console.log('LossRate='+Math.round(optimizer.barCol.totalLossBars()*10000/optimizer.barCol.totalSizeBars(),4)/100+'%');
 
-optimizer.barCol.getPiecesIdList();
+//optimizer.barCol.getPiecesIdList();
 
 
 

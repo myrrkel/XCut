@@ -7,46 +7,43 @@ function CutCollection(parentOptimizer){
 
 	this.totalCuts= function(){
 		var tsize = 0;
-		for (i=0;i<this.cuts.length;i++){tsize += this.cuts[i].l;}
+		for (cut of this.cuts){tsize += cut.l;}
 			return tsize;
 	}
 	this.totalCutsLeft= function(){
 		var tsize = 0;
-		for (i=0;i<this.cuts.length;i++){
-			if(this.cuts[i].used ==false){tsize += this.cuts[i].l;}
+		for (cut of this.cuts){
+			if(cut.used ==false){tsize += cut.l;}
 		}
 		return tsize;
 	}
 	this.countCutsLeft= function(){
 		var nb = 0;
-		for (i=0;i<this.cuts.length;i++){
-			if(this.cuts[i].used ==false){nb++};
+		for (cut of this.cuts){
+			if(cut.used ==false){nb++};
 		}
 		return nb;
 	}
 	this.minimum = function(){
 		var res = 0;
-		for (i=this.cuts.length-1;i>=0;i--){
+		for (var i=this.cuts.length-1;i>=0;i--){
 			if(this.cuts[i].used==false){res = this.cuts[i].l; break}
 		}
 		return res;
 	}
 	this.maximum = function(){
 		var res = 0;
-		for (i=0;i<this.cuts.length;i++){
-			if(this.cuts[i].used==false){
-				console.log('MAX'+this.cuts[i].l);
-				res = this.cuts[i].l; break;
-			}
+		for (var i=0;i<this.cuts.length;i++){
+			if(this.cuts[i].used==false){res = this.cuts[i].l; break}
 		}
 		return res;
 	}
 	this.countExtraCutsEqualTo = function(size){
 		var res = 0;
-		for (i=0;i<this.extraCuts.length;i++){
-			if(this.extraCuts[i].used==false && this.extraCuts[i].l == size){
+		for (extra of this.extraCuts){
+			if(extra.used==false && extra.l == size){
 				res++;
-				console.log('#'+size+' '+this.extraCuts[i].getText());
+				console.log('#'+size+' '+extra.getText());
 			}
 		}
 		return res;
@@ -69,34 +66,34 @@ function CutCollection(parentOptimizer){
 			{this.extraCuts.sort(compareExtraCuts);}		
 	}
 	this.raz= function(){
-		for (i=0;i<this.cuts.length;i++){
-			this.cuts[i].used = false
+		for (cut of this.cuts){
+			cut.used = false
 		}
 	}
 
 	this.findLongestCut= function(){
-		for (i=0;i<this.cuts.length;i++){
-
-			if(this.cuts[i].used==false){
-				cut = this.cuts[i];
+		var longestCut;
+		for (cut of this.cuts){
+			if(cut.used==false){
+				longestCut = cut;
 				break;
 			}
 		}
-		return cut;
+		return longestCut;
 	}
 
 	this.findCutFitBest= function(size){
-		var cut=null;
+		var bestCut=null;
 		var bestSizeFound = 0;
-		for (i=0;i<this.cuts.length;i++){
+		for (cut of this.cuts){
 
-			if(this.cuts[i].totalSize() > bestSizeFound && this.cuts[i].used==false){
+			if(cut.totalSize() > bestSizeFound && cut.used==false){
 
-				if(this.cuts[i].totalSize() < size-2 || this.cuts[i].l == size){
+				if(cut.totalSize() < size-2 || cut.l == size){
 					
-					if(size==2029){console.log('best='+bestSizeFound+' l='+this.cuts[i].l+' id='+this.cuts[i].id)}
-						bestSizeFound = this.cuts[i].l;
-					cut = this.cuts[i];
+					if(size==2029){console.log('best='+bestSizeFound+' l='+cut.l+' id='+cut.id)}
+						bestSizeFound = cut.l;
+					bestCut = cut;
 					break;
 
 				}
@@ -104,23 +101,22 @@ function CutCollection(parentOptimizer){
 		}
 
 		//find if there is a best cut in extras
-		for (i=0;i<this.extraCuts.length;i++){
+		for (extra of this.extraCuts){
 
 
-			if((this.extraCuts[i].totalSize() > bestSizeFound || this.extraCuts[i].l > bestSizeFound)
-				&& (this.extraCuts[i].totalSize() < size || this.extraCuts[i].l == size)
-				&& this.extraCuts[i].used==false){
+			if((extra.totalSize() > bestSizeFound || extra.l > bestSizeFound)
+				&& (extra.totalSize() < size || extra.l == size) && extra.used==false){
 
 
-				if(size==2029){console.log('*best='+bestSizeFound+' l='+this.extraCuts[i].l+' id='+this.extraCuts[i].id)}
-					bestSizeFound = this.extraCuts[i].l;
-				cut = this.extraCuts[i];
+				if(size==2029){console.log('*best='+bestSizeFound+' l='+extra.l+' id='+extra.id)}
+					bestSizeFound = extra.l;
+				bestCut = extra;
 				break;
 
 			}
 		}
 		
-		return cut;
+		return bestCut;
 	}
 
 	this.copyExtras= function(){
@@ -131,9 +127,9 @@ function CutCollection(parentOptimizer){
 		return newExtras;
 	}
 
-	this.generateExtraCuts= function(cuts1=null,cuts2=null,depth=3){
+	this.generateExtraCuts= function(cuts1=null,cuts2=null,depth=3,minCutSize=500){
 		var sum=0;
-		var max= this.maximum();
+		var max= this.optimizer.barSize;
 		var cutsA; var cutsB; 
 
 		if(cuts1==null){cutsA=this.cuts}else{this.sortCuts(true);cutsA=cuts1;};
@@ -142,14 +138,12 @@ function CutCollection(parentOptimizer){
 		console.log('max='+max+' depth='+depth+' cutsA='+cutsA.length+' cutsB='+cutsB.length);
 
 		if(depth > 1){
-			for(i=0;i<cutsA.length;i++){
-				if(cutsA[i].used == false){
-					//console.log('generateExtras='+cutsA[i].id);
-					for(j=0;j<cutsB.length;j++){
-						//if(cutsB[j].used==false){
-						if(cutsB[j].used==false && cutsA[i].checkID(cutsB[j].id)==true && cutsB[j].getSizeLastPiece() > cutsA[i].l){
+			for(cutA of cutsA){
+				if(cutA.used == false && cutA.l > minCutSize){
+					for(cutB of cutsB){
+						if(cutB.used==false && cutA.checkID(cutB.id)==true && cutB.getSizeLastPiece() > cutA.l){
 							//console.log('checkID='+cutsA[i].checkID(cutsB[j].id));
-							sum = cutsA[i].totalSize()+cutsB[j].l;
+							sum = cutA.totalSize()+cutB.l;
 							if (sum <= max){
 								var cut = new libCut.Cut(null,this.optimizer,this.cuts.length+this.extraCuts.length);
 								cut.l = sum;
@@ -161,19 +155,20 @@ function CutCollection(parentOptimizer){
 								var n = this.extraCuts.length-1;
 
 								//Add cutB or his members to pieces
-								if(cutsB[j].pieces.length > 0) {
-									for(p of cutsB[j].pieces) {
+								if(cutB.pieces.length > 0) {
+									for(p of cutB.pieces) {
+										p.parents.push(this.extraCuts[n]);
 										this.extraCuts[n].pieces.push(p);
 									}
 								}
 								else {
-									this.extraCuts[n].pieces.push(cutsB[j]);
+									this.extraCuts[n].pieces.push(cutB);
 								}
 								//Add cutA (after cutB because bigger)
-								this.extraCuts[n].pieces.push(cutsA[i]);
+								this.extraCuts[n].pieces.push(cutA);
 
-								//cutsA[i].parents.push(this.extraCuts[n]);
-								//cutsB[j].parents.push(this.extraCuts[n]);
+								cutA.parents.push(this.extraCuts[n]);
+								cutB.parents.push(this.extraCuts[n]);
 
 							}
 						}
@@ -190,59 +185,23 @@ function CutCollection(parentOptimizer){
 		}
 	}
 
-	this.generateExtraCutsOLD= function(){
+	this.setUsedExtraCutsWith = function(pieces){
+		var extra;
 
-		var sum=0;
-		var max= this.maximum();
-		console.log('max='+max);
-		for(i=0;i<this.cuts.length;i++){
-			console.log('i='+i);
-			if(this.cuts[i].used == false){
-				for(j=i+1;j<this.cuts.length;j++){
-					if(this.cuts[j].used==false){
-
-						for(k=j+1;k<this.cuts.length;k++){
-							if(this.cuts[k].used == false){
-								sum = this.cuts[i].totalSize()+this.cuts[j].totalSize()+this.cuts[k].l;
-								if (sum <= max){
-									var cut = new Cut(null,this.optimizer);
-									//cut.l = this.cuts[i].totalSize()+this.cuts[j].l;
-									cut.l = sum;
-									cut.pieces = [];
-									cut.extra = true;
-
-
-									this.extraCuts.push(cut);
-									var n = this.extraCuts.length-1;
-									this.extraCuts[n].pieces.push(this.cuts[i]);
-									this.extraCuts[n].pieces.push(this.cuts[j]);
-									this.extraCuts[n].pieces.push(this.cuts[k]);
-
-									this.cuts[i].parents.push(this.extraCuts[n]);
-									this.cuts[j].parents.push(this.extraCuts[n]);
-									this.cuts[k].parents.push(this.extraCuts[n]);
-
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	this.setUsedExtrasWith = function(pieces){
 		for(piece of pieces){
 			for(extra of this.extraCuts){
-				
+				if(extra.findPiece(piece.id)) extra.used=true;
 			}
 		}
+
 
 
 	}
 
 
 }
+
+
 
 function compareExtraCuts(a,b){
 	var res = 0;

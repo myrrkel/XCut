@@ -18,9 +18,9 @@ function Cut(jsonCut,parentOptimizer,id=0){
 	this.totalSize = function(){return this.l+this.optimizer.bladeThickness};
 	this.setUsed = function(){
 		this.used = true;
-		//this.setUsedParents();
+		this.setUsedParents();
 		this.setUsedPieces();
-		this.optimizer.cutCol.setUsedExtrasWith(this.pieces)
+		//this.optimizer.cutCol.setUsedExtraCutsWith(this.pieces)
 	}
 
 	this.setUsedParents = function(){
@@ -31,6 +31,7 @@ function Cut(jsonCut,parentOptimizer,id=0){
 			//if(this.parents[i].used==false) this.parents[i].setUsedPieces();	
 		}
 	}
+
 	this.setUsedPieces = function(){
 		//SetUsed cuts that contain this pieces
 		for(piece of this.pieces)
@@ -39,21 +40,6 @@ function Cut(jsonCut,parentOptimizer,id=0){
 		}
 	}
 
-	this.getAllPieces = function(){
-		all = [];
-
-		for(i=0;i<this.pieces.length;i++)
-		{
-			if(this.pieces[i].extra) {
-				all.push(this.pieces[i].getAllPieces());	
-			}
-			else {
-				all.push(this.pieces[i]);
-			}
-		}
-
-		return all;
-	}
 	this.getSizeLastPiece= function(){
 		var res = this.l;
 		if(this.pieces.length>0){
@@ -61,6 +47,7 @@ function Cut(jsonCut,parentOptimizer,id=0){
 		}
 		return res;
 	}
+
 	this.getText = function(){
 		var ptxt = '';
 
@@ -78,11 +65,20 @@ function Cut(jsonCut,parentOptimizer,id=0){
 		if(this.id==id)
 			{res=false}
 
-		for(n=0;n<this.pieces.length;n++){
-			if(this.pieces[n].id==id){
+		for(piece of this.pieces){
+			if(piece.id==id){
 				res=false};
-				if(this.pieces[n].checkID()==false){res=false}
+				if(piece.checkID()==false){res=false}
 			}
+		return res
+	}
+
+	this.findPiece = function(id){
+		var res = false;
+		for(p of this.pieces){
+			if(p.id==id) res = true;
+		}
+
 		return res
 	}
 

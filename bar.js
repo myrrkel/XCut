@@ -35,6 +35,9 @@ function Bar(size,id){
 		}
 		return ids;
 	}
+	this.started = function(){
+		return this.sizeUsed() > 0;
+	}
 }
 
 exports.Bar = Bar;

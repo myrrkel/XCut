@@ -25,7 +25,7 @@ function BarCollection(barsize){
 	this.findBarFitBest= function(size){
 		var ibar = -1;
 		var bestSizeFound = 0;
-		for (i=0;i<this.bars.length;i++){
+		for (var i=0;i<this.bars.length;i++){
 			if(this.bars[i].sizeLeft >= size && (bestSizeFound > this.bars[i].sizeLeft || bestSizeFound==0)){
 				bestSizeFound = this.bars[i].sizeLeft;
 				ibar = i;
@@ -38,7 +38,7 @@ function BarCollection(barsize){
 
 	this.findEmptyBar= function(){
 		var ibar = -1;
-		for (i=0;i<this.bars.length && ibar<0;i++){
+		for (var i=0;i<this.bars.length && ibar<0;i++){
 			if(this.bars[i].sizeLeft == this.barSize){ibar = i};
 		}
 
@@ -66,6 +66,10 @@ function BarCollection(barsize){
 		}
 	}
 
+	this.sortByID = function(){
+		this.bars.sort(function(a, b){return a.id - b.id});
+	}
+
 	this.countPieces = function(){
 		var res=0;
 		for(b of this.bars){
@@ -89,10 +93,10 @@ function BarCollection(barsize){
 			for(id of pids){ids.push(id)}
 		}
 
-		ids.sort();
-		for(id of ids){console.log(id)}
+	ids.sort();
+	for(id of ids){console.log(id)}
 		return ids;
-	}
+}
 
 }
 
