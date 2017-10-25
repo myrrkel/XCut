@@ -22,7 +22,7 @@ console.log('CountPiecesInBars='+optimizer.barCol.countPieces());
 console.log('SumPiecesInBars='+optimizer.barCol.sumPieces());
 console.log('SumCuts='+optimizer.cutCol.cuts.length);
 console.log('TotalCuts='+optimizer.cutCol.totalCuts());
-console.log('LossRate='+Math.round(optimizer.barCol.totalLossBars()*10000/optimizer.barCol.totalSizeBars(),4)/100+'%');
+console.log('LossRate='+Math.round(optimizer.barCol.totalLossBars()*1000000/optimizer.barCol.totalSizeBars(),4)/10000+'%');
 
 //optimizer.barCol.getPiecesIdList();
 

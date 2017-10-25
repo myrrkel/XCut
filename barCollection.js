@@ -57,14 +57,27 @@ function BarCollection(barsize){
 	}
 
 
-	this.sortBars = function(sizeLeftAsc=true){
-		if (sizeLeftAsc){
-			this.bars.sort(function(a, b){return a.sizeLeft - b.sizeLeft});
+	this.sortBars = function(descending=false){
+		if (descending==false){
+			this.bars.sort(compareBarsAsc);
 		}
 		else {
-			this.bars.sort(function(a, b){return b.sizeLeft - a.sizeLeft});
+			this.bars.sort(compareBarsDesc);
 		}
 	}
+
+
+	this.maxBarNeeded = function(onlyStartedBars){
+		var max=0;
+		for(bar of this.bars){
+			if(bar.sizeLeft > max && (onlyStartedBars==false || (onlyStartedBars==true && bar.sizeLeft!=bar.size))){
+				max = bar.sizeLeft;
+			}
+
+		}
+		return max;
+	}
+
 
 	this.sortByID = function(){
 		this.bars.sort(function(a, b){return a.id - b.id});
@@ -90,14 +103,45 @@ function BarCollection(barsize){
 
 		for(b of this.bars){
 			pids=b.getPiecesIdList();
-			for(id of pids){ids.push(id)}
+			for(id of pids){
+				ids.push(id)
+			}
 		}
 
-	ids.sort();
-	for(id of ids){console.log(id)}
+		ids.sort();
+		for(id of ids){
+			console.log(id)
+		}
 		return ids;
-}
+	}
 
 }
+
+
+function compareBars(a,b){
+	var res = 0;
+	res = b.l - a.l;
+	if(res==0){
+		res = b.getSizeLastPiece() - a.getSizeLastPiece();
+	}
+
+
+	return res;
+}
+
+function compareBarsAsc(a,b){
+	var res = 0;
+	res = b.l - a.l;
+	if(res==0){
+		res = b.id - a.id;
+	}
+
+	return res;
+}
+
+function compareBarsDesc(a,b){
+	return compareBarsAsc(b,a);
+}
+
 
 exports.BarCollection = BarCollection;

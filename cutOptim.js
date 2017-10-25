@@ -24,18 +24,105 @@ function Optimizer(arrayCuts){
 		//fill bars
 		this.optiBiggestCuts();
 
+
+		this.cutCol.generateExtraCuts(null,null,2,800,true);
+						// (onlyStartedBars=false,worstFirst=false,onePass=false)
+		this.optiCutFitBest(true,false,true);
+
+
+		this.cutCol.resetExtraCuts();
+
+		this.cutCol.generateExtraCuts(null,null,3,300);
+		//this.optiCutFitBest(false,false,true);
+
+
+		//this.cutCol.resetExtraCuts();
+
+		//this.cutCol.generateExtraCuts(null,null,5,0);
+		this.optiCutFitBest(false,false,false);
+
+
+		return this.barCol.bars;
+	}
+
+
+	this.optimize_VERYBEST = function(){
+		
+		//Loading Cuts in an array
+		this.jsonToCuts();
+		//Create a set of empty bars
+		this.initBars();	
+		//fill bars
+		this.optiBiggestCuts();
+
+
+		this.cutCol.generateExtraCuts(null,null,3,800,true);
+						// (onlyStartedBars=false,worstFirst=false,onePass=false)
+		this.optiCutFitBest(true,false,true);
+
+
+		this.cutCol.resetExtraCuts();
+
+		this.cutCol.generateExtraCuts(null,null,3,700);
+		this.optiCutFitBest(false,false,true);
+
+
+		this.cutCol.resetExtraCuts();
+
+		this.cutCol.generateExtraCuts(null,null,5,0);
+		this.optiCutFitBest(false,false,false);
+
+
+		return this.barCol.bars;
+	}
+
+	this.optimize_GOODFAST = function(){
+		//Loading Cuts in an array
+		this.jsonToCuts();
+		//Create a set of empty bars
+		this.initBars();	
+		//fill bars
+		this.optiBiggestCuts();
+
+		//this.optiStartAllBars();
+		this.cutCol.generateExtraCuts(null,null,2,800,true);
+		this.optiCutFitBest(true,true);
+
+		this.cutCol.extraCuts.splice(0,this.cutCol.extraCuts.length);
+		this.cutCol.deleteParents();
+
+		this.cutCol.generateExtraCuts(null,null,3,511);
+		this.optiCutFitBest(false,true);
+
+
+		return this.barCol.bars;
+	}
+
+	this.optimize_BEST = function(){
+		//Loading Cuts in an array
+		this.jsonToCuts();
+		//Create a set of empty bars
+		this.initBars();	
+		//fill bars
+		this.optiBiggestCuts();
+
 		//this.optiStartAllBars();
 		this.cutCol.generateExtraCuts(null,null,2,800);
 
 		//console.log('count 2029 ='+this.cutCol.countExtraCutsEqualTo(2029));
-		this.optiCutFitBest(true);
-		this.cutCol.generateExtraCuts(this.cutCol.cuts,this.cutCol.extraCuts,3,500);
-		this.optiCutFitBest(false);
+		this.optiCutFitBest(true,true);
+
+		//this.cutCol.extraCuts.splice();
+		//this.cutCol.deleteParents();
+		this.cutCol.generateExtraCuts(null,null,3,600);
+
+		//this.cutCol.generateExtraCuts(this.cutCol.cuts,this.cutCol.extraCuts,4,600);
+		this.optiCutFitBest(false,true);
 
 		//this.optiBarFitBest();
 
 
-		this.barCol.sortByID();
+		//this.barCol.sortByID();
 
 		return this.barCol.bars;
 	}
@@ -59,16 +146,18 @@ function Optimizer(arrayCuts){
 	}
 
 
-	this.optiCutFitBest = function(onlyStartedBars=false){
+	this.optiCutFitBest = function(onlyStartedBars=false,worstFirst=false,onePass=false){
 		var cutLeft = this.cutCol.countCutsLeft();
 		var cut = null;
 		var barFound = false;
+		var nbPass = 0;
 		this.cutCol.sortCuts(true);
 		this.cutCol.sortExtraCuts(true);
-		this.barCol.sortBars();
+		this.barCol.sortBars((worstFirst==false));
+		console.log(worstFirst==false);
 
 		//We add the unused cuts
-		while (cutLeft > 0) {
+		while (cutLeft > 0 && ((onePass==false)||(onePass==true && nbPass==0))) {
 			barFound = false;
 			for (bar of this.barCol.bars){
 				if(bar.sizeLeft >= this.cutCol.minimum()+this.bladeThickness && ((onlyStartedBars==true && bar.started()) || (onlyStartedBars==false))){
@@ -86,16 +175,18 @@ function Optimizer(arrayCuts){
 						else {bar.addPiece(cut)};
 
 						barFound = true;
-						this.barCol.sortBars(true);
+						
 					}
 				}
 				cutLeft = this.cutCol.countCutsLeft();	
 			}
+			this.barCol.sortBars(true);
 
 			if(onlyStartedBars){break;}
 
 			if (barFound==false){this.barCol.addBar()};
 			cutLeft = this.cutCol.countCutsLeft();	
+			nbPass++;
 		}
 	}
 
@@ -139,6 +230,15 @@ function Optimizer(arrayCuts){
 
 	this.minBarNeeded = function(){
 		return Math.ceil(this.cutCol.totalCuts()/this.barSize)
+	}
+
+	this.maxBarNeeded = function(onlyStartedBars){
+		if(onlyStartedBars==true){
+			return this.barCol.maxBarNeeded(onlyStartedBars);
+		}
+		else{
+			return this.barSize;
+		}
 	}
 
 	this.initBars = function(){

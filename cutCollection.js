@@ -60,10 +60,10 @@ function CutCollection(parentOptimizer){
 
 	this.sortExtraCuts = function(descending=false){
 		if (descending==false) 
-			{this.extraCuts.sort(function(a, b){return a.l - b.l});}
+			{this.extraCuts.sort(compareExtraCutsAsc);}
 		else
 			//{this.extraCuts.sort(function(a, b){return b.l - a.l});}		
-			{this.extraCuts.sort(compareExtraCuts);}		
+			{this.extraCuts.sort(compareExtraCutsDesc);}		
 	}
 	this.raz= function(){
 		for (cut of this.cuts){
@@ -127,13 +127,21 @@ function CutCollection(parentOptimizer){
 		return newExtras;
 	}
 
-	this.generateExtraCuts= function(cuts1=null,cuts2=null,depth=3,minCutSize=500){
+	this.copyCutArray= function(cuts){
+		var newCuts = [];
+		for (c of cuts){
+			newCuts.push(c);
+		}
+		return newCuts;
+	}
+
+	this.generateExtraCuts= function(cuts1=null,cuts2=null,depth=3,minCutSize=500,onlyStartedBars=false){
 		var sum=0;
-		var max= this.optimizer.barSize;
+		var max= this.optimizer.maxBarNeeded(onlyStartedBars);
 		var cutsA; var cutsB; 
 
 		if(cuts1==null){cutsA=this.cuts}else{this.sortCuts(true);cutsA=cuts1;};
-		if(cuts2==null){cutsB=this.cuts}else{cutsB=this.copyExtras()};
+		if(cuts2==null){cutsB=this.cuts}else{cutsB=this.copyCutArray(cuts2)};
 
 		console.log('max='+max+' depth='+depth+' cutsA='+cutsA.length+' cutsB='+cutsB.length);
 
@@ -181,7 +189,7 @@ function CutCollection(parentOptimizer){
 
 		if(depth > 2){
 			depth--;
-			this.generateExtraCuts(this.cuts,this.extraCuts,depth);
+			this.generateExtraCuts(this.cuts,this.extraCuts,depth,minCutSize,onlyStartedBars);
 		}
 	}
 
@@ -193,9 +201,17 @@ function CutCollection(parentOptimizer){
 				if(extra.findPiece(piece.id)) extra.used=true;
 			}
 		}
+	}
 
+	this.deleteParents= function(){
+		for(cut of this.cuts){
+			cut.parents.splice(0,cut.parents.length);
+		}
+	}
 
-
+	this.resetExtraCuts= function(){
+		this.extraCuts.splice(0,this.extraCuts.length);
+		this.deleteParents();
 	}
 
 
@@ -203,15 +219,28 @@ function CutCollection(parentOptimizer){
 
 
 
-function compareExtraCuts(a,b){
+function compareExtraCutsDesc(a,b){
 	var res = 0;
 	res = b.l - a.l;
 	if(res==0){
 		res = b.getSizeLastPiece() - a.getSizeLastPiece();
 	}
 
+	if(res==0){
+		res = b.id - a.id;
+	}
+
+	if(res==0){
+		console.log('Tri cut ambigue a='+a.l+' b='+b.l);
+	}
 
 	return res;
 }
+
+function compareExtraCutsAsc(a,b){
+	
+	return compareExtraCutsDesc(b,a);
+}
+
 
 exports.CutCollection = CutCollection;
