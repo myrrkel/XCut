@@ -19,10 +19,12 @@ function Cut(jsonCut,parentOptimizer,id=0){
 
 Cut.prototype.totalSize = function(){return this.l+this.optimizer.bladeThickness};
 
-Cut.prototype.setUsed = function(){
-	this.used = true;
-	this.setUsedParents();
-	this.setUsedPieces();
+Cut.prototype.setUsed = function(isUsed=true){
+	this.used = isUsed;
+	if (isUsed==true){
+		this.setUsedParents();
+		this.setUsedPieces();
+	}
 		//this.optimizer.cutCol.setUsedExtraCutsWith(this.pieces)
 };
 

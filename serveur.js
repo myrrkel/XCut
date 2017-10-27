@@ -15,17 +15,6 @@ var optimizer = new libOptim.Optimizer(cuts);
 
 var bars = optimizer.optimize();
 
-console.log('Bars number='+optimizer.barCol.countBars());
-console.log('TotalSizeBars='+optimizer.barCol.totalSizeBars());
-console.log('TotalUsedBars='+optimizer.barCol.totalUsedBars());
-console.log('CountPiecesInBars='+optimizer.barCol.countPieces());
-console.log('SumPiecesInBars='+optimizer.barCol.sumPieces());
-console.log('SumCuts='+optimizer.cutCol.cuts.length);
-console.log('TotalCuts='+optimizer.cutCol.totalCuts());
-console.log('LossRate='+Math.round(optimizer.barCol.totalLossBars()*1000000/optimizer.barCol.totalSizeBars(),4)/10000+'%');
-
-//optimizer.barCol.getPiecesIdList();
-
 
 
 /* On utilise les sessions */

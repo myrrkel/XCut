@@ -11,9 +11,10 @@ function Optimizer(arrayCuts){
 	this.stock = [1200,826];
 	this.bladeThickness = 2;
 	this.barSize = 6000;
+	this.lossCeil = 1000; //If a bar has a sizeLeft >= 1000, it's not a loss, this part of bar could be added in stock.
 
 	this.cutCol = new libCutCol.CutCollection(this);
-	this.barCol = new libBarCol.BarCollection(this.barSize);
+	this.barCol = new libBarCol.BarCollection(this);
 
 
 	this.optimize = function(){
@@ -24,26 +25,38 @@ function Optimizer(arrayCuts){
 		//fill bars
 		this.optiBiggestCuts();
 
+		this.optimize_NOTBAD();
+
+		for(var i=0;i<3;i++){
+			
+			console.log('/////////////////////////////////////  IMPROVEMENT N°'+i);
+			this.barCol.improve();
+			this.repport();
+			this.barCol.razImproved();
+
+		}
+
+		//this.optiCutFitBest(false,false,false);
+		this.repport();
+
+		return this.barCol.bars;
+	};
+
+
+	this.optimize_NOTBAD = function(){
 
 		this.cutCol.generateExtraCuts(null,null,2,800,true);
 						// (onlyStartedBars=false,worstFirst=false,onePass=false)
 		this.optiCutFitBest(true,false,true);
 
-
 		this.cutCol.resetExtraCuts();
 
 		this.cutCol.generateExtraCuts(null,null,3,300);
-		//this.optiCutFitBest(false,false,true);
 
-
-		//this.cutCol.resetExtraCuts();
-
-		//this.cutCol.generateExtraCuts(null,null,5,0);
 		this.optiCutFitBest(false,false,false);
 
-
 		return this.barCol.bars;
-	}
+	};
 
 
 	this.optimize_VERYBEST = function(){
@@ -74,7 +87,7 @@ function Optimizer(arrayCuts){
 
 
 		return this.barCol.bars;
-	}
+	};
 
 	this.optimize_GOODFAST = function(){
 		//Loading Cuts in an array
@@ -96,7 +109,7 @@ function Optimizer(arrayCuts){
 
 
 		return this.barCol.bars;
-	}
+	};
 
 	this.optimize_BEST = function(){
 		//Loading Cuts in an array
@@ -106,26 +119,19 @@ function Optimizer(arrayCuts){
 		//fill bars
 		this.optiBiggestCuts();
 
-		//this.optiStartAllBars();
 		this.cutCol.generateExtraCuts(null,null,2,800);
 
 		//console.log('count 2029 ='+this.cutCol.countExtraCutsEqualTo(2029));
 		this.optiCutFitBest(true,true);
 
-		//this.cutCol.extraCuts.splice();
-		//this.cutCol.deleteParents();
 		this.cutCol.generateExtraCuts(null,null,3,600);
 
-		//this.cutCol.generateExtraCuts(this.cutCol.cuts,this.cutCol.extraCuts,4,600);
 		this.optiCutFitBest(false,true);
-
-		//this.optiBarFitBest();
-
 
 		//this.barCol.sortByID();
 
 		return this.barCol.bars;
-	}
+	};
 
 
 
@@ -143,7 +149,7 @@ function Optimizer(arrayCuts){
 				this.barCol.lastBar.addPiece(cut);
 			}
 		}
-	}
+	};
 
 
 	this.optiCutFitBest = function(onlyStartedBars=false,worstFirst=false,onePass=false){
@@ -188,7 +194,7 @@ function Optimizer(arrayCuts){
 			cutLeft = this.cutCol.countCutsLeft();	
 			nbPass++;
 		}
-	}
+	};
 
 
 	this.optiBiggestCuts = function(autoAdd=false){
@@ -211,7 +217,8 @@ function Optimizer(arrayCuts){
 			}
 			else {break};
 		}
-	}
+	};
+
 
 	this.optiStartAllBars = function(){
 		this.cutCol.sortCuts(true);
@@ -225,12 +232,13 @@ function Optimizer(arrayCuts){
 				}
 			}
 		}
-	}
+	};
 
 
 	this.minBarNeeded = function(){
 		return Math.ceil(this.cutCol.totalCuts()/this.barSize)
-	}
+	};
+
 
 	this.maxBarNeeded = function(onlyStartedBars){
 		if(onlyStartedBars==true){
@@ -239,7 +247,8 @@ function Optimizer(arrayCuts){
 		else{
 			return this.barSize;
 		}
-	}
+	};
+
 
 	this.initBars = function(){
 		var nbBar = this.minBarNeeded();
@@ -247,7 +256,8 @@ function Optimizer(arrayCuts){
 		for (var i=0;i<nbBar;i++){
 			this.barCol.addBar()
 		}
-	}
+	};
+
 
 	this.jsonToCuts = function() {
 		this.cutCol.cuts = [];
@@ -255,8 +265,24 @@ function Optimizer(arrayCuts){
 
 			this.cutCol.cuts.push(new libCut.Cut(this.jsonCuts[i],this,i));
 		}
+	};
 
-	}
+
+	this.repport = function() {
+
+		console.log('Bars number='+this.barCol.countBars());
+		console.log('TotalSizeBars='+this.barCol.totalSizeBars());
+		console.log('TotalUsedBars='+this.barCol.totalUsedBars());
+		console.log('CountPiecesInBars='+this.barCol.countPieces());
+		console.log('SumPiecesInBars='+this.barCol.sumPieces());
+		console.log('SumCuts='+this.cutCol.cuts.length);
+		console.log('TotalCuts='+this.cutCol.totalCuts());
+		console.log('TotalLoss='+this.barCol.totalLossBars());
+		console.log('PerfectBars='+this.barCol.countPerfectBars());
+		console.log('LossRate='+Math.round(this.barCol.totalLossBars()*1000000/this.barCol.totalSizeBars(),4)/10000+'%');
+
+	};
+
 
 }
 
