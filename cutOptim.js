@@ -27,14 +27,16 @@ function Optimizer(arrayCuts){
 
 		this.optimize_NOTBAD();
 
-		for(var i=0;i<3;i++){
+		var nbImprovement = 0, i=1;
+		do {
 			
 			console.log('/////////////////////////////////////  IMPROVEMENT N°'+i);
-			this.barCol.improve();
+			nbImprovement = this.barCol.improve();
 			this.repport();
 			this.barCol.razImproved();
+			i++;
 
-		}
+		} while(nbImprovement>0);
 
 		//this.optiCutFitBest(false,false,false);
 		this.repport();

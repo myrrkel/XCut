@@ -25,20 +25,18 @@ Cut.prototype.setUsed = function(isUsed=true){
 		this.setUsedParents();
 		this.setUsedPieces();
 	}
-		//this.optimizer.cutCol.setUsedExtraCutsWith(this.pieces)
 };
 
 Cut.prototype.setUsedParents = function(){
-		//SetUsed ExtraCuts that contained this cut
+	//SetUsed ExtraCuts that contained this cut
 	for(parent of this.parents)
 	{
 		if(parent.used==false) parent.used = true;
-			//if(this.parents[i].used==false) this.parents[i].setUsedPieces();	
 	}
 };
 
 Cut.prototype.setUsedPieces = function(){
-		//SetUsed cuts that contain this pieces
+	//SetUsed cuts that contain this pieces
 	for(piece of this.pieces)
 	{
 		if(piece.used==false) piece.setUsed();	
@@ -66,22 +64,23 @@ Cut.prototype.getText = function(){
 };
 
 Cut.prototype.checkID = function(id){
+	//Return true if an id isn't used by this cut or his pieces
 	var res = true;
 	if(this.id==id)
 		{res=false}
 
 	for(piece of this.pieces){
-		if(piece.id==id){
-			res=false};
-			if(piece.checkID()==false){res=false}
-		}
+		if(piece.id==id){res=false};
+		if(piece.checkID()==false){res=false};
+		if(res==false)break
+	}
 	return res
 };
 
 Cut.prototype.findPiece = function(id){
 	var res = false;
 	for(p of this.pieces){
-		if(p.id==id) res = true;
+		if(p.id==id) {res = true; break}
 	}
 
 	return res

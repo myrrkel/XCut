@@ -61,11 +61,11 @@ function CutCollection(parentOptimizer){
 	this.sortExtraCuts = function(descending=false){
 		if (descending==false) 
 			{this.extraCuts.sort(compareExtraCutsAsc);}
-		else
-			//{this.extraCuts.sort(function(a, b){return b.l - a.l});}		
+		else		
 			{this.extraCuts.sort(compareExtraCutsDesc);}		
 	}
-	this.raz= function(){
+
+	this.razUsed= function(){
 		for (cut of this.cuts){
 			cut.used = false
 		}
@@ -136,9 +136,8 @@ function CutCollection(parentOptimizer){
 	}
 
 	this.generateExtraCuts= function(cuts1=null,cuts2=null,depth=3,minCutSize=500,onlyStartedBars=false){
-		var sum=0;
-		var max= this.optimizer.maxBarNeeded(onlyStartedBars);
-		var cutsA; var cutsB; 
+		var cutsA, cutsB, sum = 0;
+		var max = this.optimizer.maxBarNeeded(onlyStartedBars);
 
 		if(cuts1==null){cutsA=this.cuts}else{this.sortCuts(true);cutsA=cuts1;};
 		if(cuts2==null){cutsB=this.cuts}else{cutsB=this.copyCutArray(cuts2)};

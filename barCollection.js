@@ -14,19 +14,19 @@ function BarCollection(parentOptimizer){
 			return tsize;
 	};
 
-	this.countPerfectBars= function(){
+	this.countPerfectBars = function(){
 		var nb = 0;
 		for (bar of this.bars){if(bar.isPerfect()) nb ++;}
 			return nb;
 	};
 
-	this.totalUsedBars= function(){
+	this.totalUsedBars = function(){
 		var tsize = 0;
 		for (bar of this.bars){tsize += bar.sizeUsed();}
 			return tsize;
 	};
 
-	this.totalLossBars= function(){
+	this.totalLossBars = function(){
 		var tsize = 0;
 		this.sortBars(true);
 		var worst = this.findWorstBar(true);
@@ -39,9 +39,8 @@ function BarCollection(parentOptimizer){
 		return tsize;
 	};
 
-	this.findBarFitBest= function(size){
-		var ibar = -1;
-		var bestSizeFound = 0;
+	this.findBarFitBest = function(size){
+		var ibar = -1, bestSizeFound = 0;
 		for (var i=0;i<this.bars.length;i++){
 			if(this.bars[i].sizeLeft >= size && (bestSizeFound > this.bars[i].sizeLeft || bestSizeFound==0)){
 				bestSizeFound = this.bars[i].sizeLeft;
@@ -54,7 +53,7 @@ function BarCollection(parentOptimizer){
 	};
 
 
-	this.findEmptyBar= function(){
+	this.findEmptyBar = function(){
 		var ibar = -1;
 		for (var i=0;i<this.bars.length && ibar<0;i++){
 			if(this.bars[i].sizeLeft == this.barSize){ibar = i};
@@ -120,8 +119,7 @@ function BarCollection(parentOptimizer){
 	};
 
 	this.getPiecesIdList = function(){
-		var ids=[];
-		var pids=[];
+		var ids=[], pids=[];
 
 		for(b of this.bars){
 			pids=b.getPiecesIdList();
@@ -151,8 +149,8 @@ function BarCollection(parentOptimizer){
 	};
 
 
-	this.findBarToImproveWith= function(pieceToSwitch,originBar){
-		var res = new Object(); piece = null; minPiece = pieceToSwitch; newLeft = 0;nextLeft = -1; bestSizeLeft=-1;
+	this.findBarToImproveWith = function(pieceToSwitch,originBar){
+		var res = new Object(), piece = null, minPiece = pieceToSwitch, newLeft = 0, nextLeft = -1, bestSizeLeft=-1;
 		//console.log('Search bar for size '+pieceToSwitch.l);
 
 		for (bar of this.bars){
@@ -189,13 +187,11 @@ function BarCollection(parentOptimizer){
 
 
 	this.improve = function(){
-		var improvement = null;
-		var bestImprovement = null;
+		var improvement = null, bestImprovement = null, nbImprovement=0;
 		this.sortBars(true);
-		var i=0;
 		var worstBar = this.findWorstBar();
+
 		while(worstBar!=null){
-			i++;
 			
 			console.log('Worst='+worstBar.id+' left='+worstBar.sizeLeft);
 			for(p of worstBar.pieces){
@@ -215,13 +211,53 @@ function BarCollection(parentOptimizer){
 
 			if(bestImprovement != null){
 				console.log('BestImprovement=> bar='+bestImprovement.bar.id+' pieceToReplace='+bestImprovement.pieceToReplace.l+' pieceToSwitch='+bestImprovement.pieceToSwitch.l);
-				//bestImprovement.pieceToReplace.setUsed(false);
-				bestImprovement.bar.supprPiece(bestImprovement.pieceToReplace);
 
+				bestImprovement.bar.supprPiece(bestImprovement.pieceToReplace);
 				worstBar.supprPiece(bestImprovement.pieceToSwitch);
 
-				//worstBar.calcSizeLeft();
-				//bestImprovement.bar.calcSizeLeft();
+				bestImprovement.bar.addPiece(bestImprovement.pieceToSwitch);
+				worstBar.addPiece(bestImprovement.pieceToReplace);
+
+				nbImprovement++;
+				bestImprovement = null;
+
+
+			}else{
+				worstBar.improved = true;
+			}
+			worstBar = this.findWorstBar();
+		}
+		return nbImprovement;
+	};
+
+	this.improve2 = function(){
+		var improvement = null, bestImprovement = null;
+		this.sortBars(true);
+		
+		var worstBar = this.findWorstBar();
+		while(worstBar!=null){
+			
+			console.log('Worst='+worstBar.id+' left='+worstBar.sizeLeft);
+			for(p of worstBar.pieces){
+				improvement = this.findBarToImproveWith(p,worstBar);
+				improvement.pieceToSwitch = p;
+				if(improvement.bar != null){
+					if(bestImprovement==null) {
+						bestImprovement = improvement;
+					}
+					else{
+						if(improvement.nextLeft < bestImprovement.nextLeft){
+							bestImprovement = improvement;
+						}
+					}
+				}
+			}
+
+			if(bestImprovement != null){
+				console.log('BestImprovement=> bar='+bestImprovement.bar.id+' pieceToReplace='+bestImprovement.pieceToReplace.l+' pieceToSwitch='+bestImprovement.pieceToSwitch.l);
+
+				bestImprovement.bar.supprPiece(bestImprovement.pieceToReplace);
+				worstBar.supprPiece(bestImprovement.pieceToSwitch);
 
 				bestImprovement.bar.addPiece(bestImprovement.pieceToSwitch);
 				worstBar.addPiece(bestImprovement.pieceToReplace);
